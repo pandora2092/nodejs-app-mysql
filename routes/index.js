@@ -1,50 +1,41 @@
 const express = require('express');
 const router = express.Router();
-const mysqlx = require('@mysql/xdevapi');
-const docs = [];
+const mysql = require('./method.js');
 
-mysqlx.getSession({
-  host: 'localhost',
-  port: '33060',
-  dbUser: 'root',
-  dbPassword: '4647187Cc'
-  }).then(function (session) {
-  const schema = session.getSchema('nik');
-  const collection = schema.getCollection('list2');
-  
-  collection
-  .find('')
-  .execute(doc => {
-    docs.push(doc);
-    router.get('/api/search', function(req, res, next) {
-      res.json(docs);
-      //res.render('index', {docs});
-    });
-  })
-  .then((doc) => {
-  })
-  
-  session.close();
-})
-
-router.post('/api/item/save', function (req, res, next) {
-  mysqlx.getSession({
-    host: 'localhost',
-    port: '33060',
-    dbUser: 'root',
-    dbPassword: '4647187Cc'
-  }).then(function (session) {
-    var schema = session.getSchema('nik');
-    var collection = schema.getCollection('list2');
-    console.log(req.body);
-
-    collection
-    .add(req.body)
-    .execute()
-    .then(() => {
-    })
-
+router.post('/api/admin/item/:id', function (req, res, next) {
+  mysql.deletePost(req.params.id, function (error, deleteBody) {
+    if (error) { return next(error); }
+    res.json(deleteBody);
   });
 });
+
+router.post('/api/admin/item/:id/edit', function (req, res, next) {
+  mysql.editPost(req.body, req.params.id, function (error, editBody) {
+    if (error) { return next(error); }
+    res.json(editBody);
+  });
+});
+
+router.get('/api/search', function (req, res, next) {
+  mysql.getAllItems(function (error, news) {
+    if (error) { return next(error); }
+    res.json(news);
+  });
+});
+
+router.get('/api/search/:id', function (req, res, next) {
+  mysql.getItemById(req.params.id, function (error, rows) {
+    if (error) { return next(error); }
+    res.json(rows);
+  });
+});
+
+router.post('/api/item/save', function (req, res, next) {
+  mysql.addPost(req.body, function (error, postBody) {
+    if (error) { return next(error); }
+    res.json(postBody);
+  });
+});
+
 
 module.exports = router;
